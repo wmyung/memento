@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "memento-memory"
+version = "0.1.0"
+description = "Efficient Memory System: SQLite + LLM + Wiki + Network"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "Woojae Myung"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Database :: Front-Ends",
+]
+keywords = ["memory", "sqlite", "llm", "wiki", "multi-agent"]
+
+[tool.setuptools]
+py-modules = ["memento_cli", "memento_sync"]
+
+[project.scripts]
+memento = "memento_cli:main"
+memento-sync = "memento_sync:main"

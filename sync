@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+"""memento-sync launcher."""
+import sys
+from pathlib import Path
+repo = Path(__file__).resolve().parent
+if repo.joinpath("memento_sync.py").exists():
+    sys.path.insert(0, str(repo))
+from memento_sync import main
+main()

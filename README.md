@@ -152,19 +152,19 @@ memento deep-recall "deployment strategy"
 
 ## For Wiki LLM Users
 
-If you currently use [WikiLLM](https://github.com/wmyung/hermes-wiki) (raw/sources/analysis pipeline), MEMENTO adds a **token-efficient fact layer**.
+If you currently use [WikiLLM](https://github.com/wmyung/hermes-wiki) (raw/sources/analysis pipeline), MEMENTO adds a **token-efficient fact layer** alongside it.
 
 | | WikiLLM alone | + MEMENTO fact store |
 |---|---|---|
-| **Cost per write** | LLM summarization + categorization + linking (~1000s tokens) | SQLite INSERT (~0 tokens) |
-| **Latency per write** | Seconds (LLM call) | ~5ms |
-| **Write policy** | Agent must ask user, think, summarize | Auto-save every session |
+| **Write cost** | LLM summarizes + categorizes + links + structures | LLM extracts fact, simple INSERT |
+| **Write latency** | Seconds (full LLM call) | ~5ms |
+| **Write policy** | Agent asks, thinks, curates | Auto-save every session |
 | **Read latency** | ~50–500ms (grep markdown) | ~5ms (FTS5 BM25) |
-| **Best for** | Deep knowledge: procedures, analyses, docs | Quick facts: preferences, config, entities |
+| **Best for** | Deep knowledge: docs, analysis, procedures | Quick facts: preferences, config, entities |
 
-**The key asymmetry:** A wiki page requires LLM reasoning to write — summarizing, categorizing, linking to existing pages, maintaining structure. A fact store write is just INSERT. Facts should be auto-saved because they cost almost nothing. Wiki pages should be curated because they cost tokens.
+**The key asymmetry:** Both systems use LLM processing to write. But a wiki page requires the LLM to summarize, categorize, link to existing pages, and maintain structure — a full knowledge curation pass. A fact store write just needs the LLM to extract the key fact — lighter processing, same extraction context.
 
-But you still need the wiki for deep knowledge. The keyword bridge connects the two: facts carry `wiki:slug` references, so a quick `memento deep-recall` can retrieve the full wiki page when you need depth.
+Facts should be auto-saved because they're cheaper to write. Wiki pages should be curated because they cost more to produce well. The keyword bridge connects both: facts carry `wiki:slug` references, so a quick `memento deep-recall` retrieves the full wiki page when you need depth.
 
 ## Feature Comparison: MEMENTO vs Original Hermes Tools
 

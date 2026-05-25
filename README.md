@@ -1,10 +1,11 @@
 # MEMENTO
 
-**The SQLite Wiki Memory — facts you can search, knowledge you can read.**
+**Agent Memory System — SQLite fact store + Git wiki + keyword bridge. No embeddings, no Docker.**
 
 [![PyPI](https://img.shields.io/pypi/v/memento-memory)](https://pypi.org/project/memento-memory/)
 [![Python](https://img.shields.io/pypi/pyversions/memento-memory)](https://pypi.org/project/memento-memory/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Used by](https://img.shields.io/badge/used%20by-agent--wiki-blue)](https://github.com/wmyung/agent-wiki)
 
 MEMENTO is a **two-system memory** for AI agents:
 
@@ -13,6 +14,16 @@ MEMENTO is a **two-system memory** for AI agents:
 - **A keyword bridge** connecting them — facts carry wiki references. When you need depth, it finds the fact and retrieves the corresponding wiki page.
 
 `pip install memento-memory` and `memento init`. No vector DB. No embeddings. No Docker.
+
+---
+
+## Production Users
+
+MEMENTO's architecture is deployed in production as **Hermes Agent's shared memory system** — a 6-agent multi-agent setup managing biomedical research pipelines across 2 machines (GCP VM + local GPU server).
+
+- **[wmyung/agent-wiki](https://github.com/wmyung/agent-wiki)** — 6-agent shared wiki deployed on GCP (3 agents) and a local GPU server (3 agents), connected via git sync and MEMENTO-style keyword bridge.
+
+The agent-wiki implements the exact same ME Complex + Wiki Complex + keyword bridge pattern, with auto-push cron (2h), deploy-key-based access, and SOUL.md/AGENTS.md integration.
 
 ---
 
@@ -330,7 +341,7 @@ Your original Hermes data is preserved. Both systems can run side by side. Rollb
 
 ## Keywords for Discovery
 
-`agent memory`, `AI agent memory`, `multi-agent memory`, `SQLite knowledge base`, `LLM knowledge base`, `agent knowledge management`, `AI memory system`, `vector database alternative`, `no-embedding memory`, `agent knowledge base`, `AI wiki`, `SQLite FTS5 memory`, `BM25 agent memory`, `agent long-term memory`, `persistent memory for AI agents`, `local AI memory`, `offline agent memory`, `Heremes Agent memory`, `Claude Code memory`, `Codex CLI memory`
+`agent memory`, `AI agent memory`, `multi-agent memory`, `SQLite knowledge base`, `LLM knowledge base`, `agent knowledge management`, `AI memory system`, `vector database alternative`, `no-embedding memory`, `agent knowledge base`, `AI wiki`, `SQLite FTS5 memory`, `BM25 agent memory`, `agent long-term memory`, `persistent memory for AI agents`, `local AI memory`, `offline agent memory`, `Hermes Agent memory`, `Claude Code memory`, `Codex CLI memory`, `AI agent tools`, `LLM tool memory`, `agentic memory`, `memory for AI assistants`, `structure memory AI`, `AI agent long-term memory`, `knowledge graph agent`, `fact store AI`, `agent memory database`, `SQLite for AI agents`, `markdown knowledge base`, `git wiki agent`, `AI research memory`, `paper memory system`, `academic AI memory`, `multi-agent knowledge sharing`, `agent memory without vector DB`, `lightweight agent memory`, `Python agent memory`, `CLI agent memory`, `MCP memory server`, `Claude memory tool`, `AI memory manager`, `agent memory pipeline`, `episodic memory AI`, `semantic memory AI`
 
 ---
 

@@ -212,8 +212,8 @@ Tags and relations span both fact store and wiki. The `l3_tags` and `l3_relation
 ## Sync Architecture (Multi-Host)
 
 ```
-Master (GCP VM)
-├── ME DB ──scp (cron */5)────▶ Replica (김분당)
+Master (main host)
+├── ME DB ──scp (cron */5)────▶ Replica (secondary host)
 ├── Wiki ──git push/pull────────▶ All agents (bidirectional)
 └── OP DB ──per-agent──────────▶ (no cross-host sync)
 ```
@@ -229,7 +229,7 @@ MEMENTO uses a simple protocol to decide how deep to search:
 | Trigger | Depth | Latency | What happens |
 |---------|-------|---------|--------------|
 | Normal query | 1-hop | ~5ms | Fact store only (FTS5 BM25) |
-| "잘 기억해봐" / deep recall | 2-hop | ~50ms | Fact store → extract keywords → wiki search |
+| "tell me more" / deep recall | 2-hop | ~50ms | Fact store → extract keywords → wiki search |
 
 This prevents unnecessary wiki lookups for simple factual queries while enabling deep knowledge retrieval when needed.
 

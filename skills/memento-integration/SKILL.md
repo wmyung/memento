@@ -14,7 +14,7 @@ MEMENTO is installed at `~/memento/` or `memento` in PATH. It provides two conne
 |-------|---------|---------|
 | **Fact Store** (SQLite + FTS5) | `memento recall <query>` | Preferences, config, quick facts |
 | **Knowledge Base** (Git + Markdown) | `memento wiki search <query>` | Procedures, pipelines, research notes |
-| **Deep recall** (fact → keyword → wiki) | `memento deep-recall <query>` | When user says "잘 기억해봐" or needs depth |
+| **Deep recall** (fact → keyword → wiki) | `memento deep-recall <query>` | When user says "tell me more" or "go deeper" |
 
 ### Always include keywords when storing
 

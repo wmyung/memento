@@ -15,10 +15,11 @@ CONFIG_DIR = HOME / ".memento"
 ME_DB = CONFIG_DIR / "memory.sqlite3"       # ME Complex (L0, L1, L2, L3)
 OP_DB = CONFIG_DIR / "agent.db"              # SQLite Suite (cache, artifacts, decisions, experiences)
 WIKI_DIR = HOME / "wiki"                     # Wiki Complex
-
+MEMENTO_SESSION_ID = os.environ.get("MEMENTO_SESSION_ID", "")
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+WIKI_DIR.mkdir(parents=True, exist_ok=True)
 
-# ── Schemas ──
+# ── SQLite Suite schema ──
 
 ME_SCHEMA = """
 CREATE TABLE IF NOT EXISTS memories (
@@ -147,6 +148,11 @@ def cmd_init():
     print(f"   ME DB:  {ME_DB}")
     print(f"   OP DB:  {OP_DB}")
     print(f"   Wiki:   {WIKI_DIR}")
+
+def ensure_init():
+    """Ensure databases exist, create them if not."""
+    if not ME_DB.exists() or not OP_DB.exists():
+        cmd_init()
 
 # ── ME Complex — L0: raw facts ──
 
@@ -288,6 +294,55 @@ def cmd_decisions(topic=None):
         print(f"     → {r['decision'][:100]}")
         if r['rationale']: print(f"     why: {r['rationale'][:100]}")
 
+# ── SQLite Suite — experiences ──
+
+def cmd_experience_add(exp_type, summary, domain="", approach="", outcome="", lesson="", tags="", severity=1):
+    if exp_type not in ("success", "failure", "correction", "lesson"):
+        print(f"❌ Invalid type: {exp_type}. Use: success, failure, correction, lesson"); return
+    ensure_init()
+    c = op_db()
+    c.execute(
+        "INSERT INTO experiences (experience_type, domain, task_summary, approach, outcome, lesson, context_tags, severity, agent_name) VALUES (?,?,?,?,?,?,?,?,?)",
+        (exp_type, domain, summary, approach, outcome, lesson, tags, severity, os.environ.get("MEMENTO_AGENT_NAME", ""))
+    )
+    c.commit(); c.close()
+    print(f"✅ [{exp_type}] {summary[:60]}")
+
+def cmd_experience_recall(query, limit=5):
+    ensure_init()
+    c = op_db()
+    rows = c.execute(
+        "SELECT id, experience_type, domain, task_summary, lesson, severity, recurrence_count, created_at FROM experiences WHERE task_summary LIKE ? OR lesson LIKE ? OR context_tags LIKE ? ORDER BY severity DESC, created_at DESC LIMIT ?",
+        (f"%{query}%", f"%{query}%", f"%{query}%", limit)
+    ).fetchall()
+    c.close()
+    if not rows: print(f"📭 No experiences match '{query}'"); return
+    for r in rows:
+        d = datetime.fromtimestamp(r['created_at'], tz=timezone.utc).strftime('%Y-%m-%d')
+        icon = {"success": "✅", "failure": "❌", "correction": "🔧", "lesson": "📖"}.get(r['experience_type'], "📌")
+        print(f"  {icon} [{d}] [{r['experience_type']}] {r['task_summary'][:80]}")
+        if r['lesson']: print(f"     lesson: {r['lesson'][:120]}")
+        print()
+
+def cmd_experience_list(exp_type=None, domain=None, limit=20):
+    ensure_init()
+    c = op_db()
+    sql = "SELECT id, experience_type, domain, task_summary, lesson, severity, created_at FROM experiences WHERE 1=1"
+    params = []
+    if exp_type: sql += " AND experience_type = ?"; params.append(exp_type)
+    if domain: sql += " AND domain LIKE ?"; params.append(f"%{domain}%")
+    sql += " ORDER BY created_at DESC LIMIT ?"; params.append(limit)
+    rows = c.execute(sql, params).fetchall()
+    c.close()
+    if not rows: print("📭 No experiences"); return
+    for r in rows:
+        d = datetime.fromtimestamp(r['created_at'], tz=timezone.utc).strftime('%Y-%m-%d')
+        icon = {"success": "✅", "failure": "❌", "correction": "🔧", "lesson": "📖"}.get(r['experience_type'], "📌")
+        print(f"  {icon} [{d}] [{r['experience_type']}] {r['task_summary'][:80]}")
+        if r['lesson']: print(f"     {r['lesson'][:100]}")
+        print()
+
+
 # ── Semantic Graph (L3) ──
 
 def cmd_tag(uri, tag):
@@ -374,7 +429,9 @@ def print_usage():
     print("  artifact list [--tag t]")
     print("  decide <topic> <decision> [--rationale r]")
     print("  decisions [--topic t]")
-    print()
+    print("  experience add <type> <summary> [--domain d] [--lesson l] [--tags t] [--severity <1-5>]")
+    print("  experience recall <query>")
+    print("  experience list [--type success|failure|correction|lesson]")
     print()
     print("  Upgrade (from Hermes sqlite-suitectl):")
     print("  ─────────────────────────────────────")
@@ -452,6 +509,31 @@ def main():
     elif cmd == "decisions":
         topic = " ".join(args) if args else None
         cmd_decisions(topic)
+    elif cmd == "experience":
+        if len(args) < 2: print("Usage: memento experience add|recall|list"); return
+        sub = args[0]
+        if sub == "add":
+            if len(args) < 3: print("Usage: memento experience add <type> <summary> [--domain d] [--lesson l] [--tags t] [--severity <1-5>]"); return
+            exp_type, summary = args[1], args[2]
+            domain = lesson = tags = ""; severity = 1
+            for i, a in enumerate(args[3:]):
+                if a == "--domain" and i+1 < len(args[3:]): domain = args[3+i+1]
+                if a == "--lesson" and i+1 < len(args[3:]): lesson = args[3+i+1]
+                if a == "--tags" and i+1 < len(args[3:]): tags = args[3+i+1]
+                if a == "--severity" and i+1 < len(args[3:]):
+                    try: severity = int(args[3+i+1])
+                    except: pass
+            cmd_experience_add(exp_type, summary, domain, "", "", lesson, tags, severity)
+        elif sub == "recall":
+            if len(args) < 2: print("Usage: memento experience recall <query>"); return
+            cmd_experience_recall(" ".join(args[1:]))
+        elif sub == "list":
+            exp_type = None; domain = None
+            for i, a in enumerate(args[1:]):
+                if a == "--type" and i+1 < len(args[1:]): exp_type = args[1+i+1]
+                if a == "--domain" and i+1 < len(args[1:]): domain = args[1+i+1]
+            cmd_experience_list(exp_type, domain)
+        else: print(f"Unknown: {sub}")
 
     # Semantic Graph
     elif cmd == "tag":

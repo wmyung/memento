@@ -179,11 +179,12 @@ def cmd_recall(query, limit=10):
     if not rows:
         print(f"📭 No matches for '{query}'"); c.close(); return
     for r in rows:
-        d = datetime.fromtimestamp(r['created_at'], tz=timezone.utc).strftime('%Y-%m-%d')
+        d = datetime.fromtimestamp(r['created_at'], tz=timezone.utc).strftime('%Y-%m-%d %H:%M')
         kw = f" [{r['keywords']}]" if r['keywords'] else ""
         print(f"  📌 {r['id']} [{d}]{kw}")
         print(f"     {r['content'][:200]}")
         if r['access_count']: print(f"     (accessed {r['access_count']}x)")
+        if r['category']: print(f"     [{r['category']}]")
         c.execute("UPDATE memories SET access_count = access_count + 1 WHERE id = ?", (r['id'],))
     c.commit(); c.close()
 
@@ -377,6 +378,35 @@ def cmd_trace(uri):
     for r in rows:
         print(f"  🔗 {uri} ──{r['relation_type']}──▶ {r['target_uri']}")
 
+def cmd_timeline(uri):
+    """Walk temporal precedes/follows chains to reconstruct chronological order."""
+    c = me_db()
+    visited = set()
+    chain = []
+
+    def walk(u, direction):
+        if u in visited: return
+        visited.add(u)
+        # backward: find what precedes this
+        for r in c.execute("SELECT source_uri FROM l3_relations WHERE target_uri = ? AND relation_type = 'precedes'", (u,)):
+            walk(r['source_uri'], "backward")
+        for r in c.execute("SELECT source_uri FROM l3_relations WHERE target_uri = ? AND relation_type = 'follows'", (u,)):
+            walk(r['source_uri'], "backward")
+        chain.append(u)
+        # forward: find what this precedes
+        for r in c.execute("SELECT target_uri FROM l3_relations WHERE source_uri = ? AND relation_type = 'precedes'", (u,)):
+            walk(r['target_uri'], "forward")
+        for r in c.execute("SELECT target_uri FROM l3_relations WHERE source_uri = ? AND relation_type = 'follows'", (u,)):
+            walk(r['target_uri'], "forward")
+
+    walk(uri, "forward")
+    c.close()
+    if not chain:
+        print(f"📭 No timeline for {uri}"); return
+    print(f"📅 Timeline for {uri}")
+    for i, u in enumerate(chain):
+        print(f"  {i+1}. {u}")
+
 # ── Status ──
 
 def cmd_status():
@@ -444,6 +474,7 @@ def print_usage():
     print("  tag-search <tag>")
     print("  relate <source> <target> [type]")
     print("  trace <uri>")
+    print("  timeline <uri>            Walk precedes/follows chains")
 
 def main():
     if len(sys.argv) < 2 or sys.argv[1] in ("-h","--help"):
@@ -548,6 +579,9 @@ def main():
     elif cmd == "trace":
         if len(args) < 1: print("Usage: memento trace <uri>"); return
         cmd_trace(args[0])
+    elif cmd == "timeline":
+        if len(args) < 1: print("Usage: memento timeline <uri>"); return
+        cmd_timeline(args[0])
 
     else:
         print(f"Unknown: {cmd}")

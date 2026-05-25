@@ -102,6 +102,7 @@ memento trace "mem:config"
 | "What was that thing?" / "do you remember" | `memento recall <query>` | Fact store only |
 | "Tell me more" / "go deeper" / "remember in detail" | `memento deep-recall <query>` | Fact → keyword → Wiki |
 | "Where's that file?" | `memento artifact list --tag <tag>` | SQLite Suite |
+| "How did this project unfold?" | `memento timeline <uri>` | L3 temporal graph |
 
 ### What to register in SOUL.md or AGENTS.md
 
@@ -151,20 +152,19 @@ memento deep-recall "deployment strategy"
 
 ## For Wiki LLM Users
 
-If you currently use [WikiLLM](https://github.com/wmyung/hermes-wiki) (Markdown wiki with raw/sources/analysis pipeline), MEMENTO adds the missing half: **a fast fact store.**
+If you currently use [WikiLLM](https://github.com/wmyung/hermes-wiki) (raw/sources/analysis pipeline), MEMENTO adds a **token-efficient fact layer**.
 
-| What you have (WikiLLM) | What MEMENTO adds |
-|--------------------------|-------------------|
-| Deep knowledge (procedures, docs) | Quick facts (preferences, config, entities) — **~5ms recall** |
-| Git versioned, human-readable | SQLite FTS5, agent-searchable |
-| LLM-curated (raw→sources→analysis) | Auto-saved every session, no permission needed |
-| Manual wiki search (`grep`) | `memento recall` — BM25 semantic search |
-| Knowledge isolation | **Keyword bridge** connects facts to wiki pages |
-| Single-agent | **Multi-agent**: shared fact store + shared wiki |
+| | WikiLLM alone | + MEMENTO fact store |
+|---|---|---|
+| **Cost per write** | LLM summarization + categorization + linking (~1000s tokens) | SQLite INSERT (~0 tokens) |
+| **Latency per write** | Seconds (LLM call) | ~5ms |
+| **Write policy** | Agent must ask user, think, summarize | Auto-save every session |
+| **Read latency** | ~50–500ms (grep markdown) | ~5ms (FTS5 BM25) |
+| **Best for** | Deep knowledge: procedures, analyses, docs | Quick facts: preferences, config, entities |
 
-**The key asymmetry:** WikiLLM is optimized for *reading and writing deep knowledge*, which requires human/LLM effort. But most agent memory needs are *quick facts* ("what Python version?", "what's the config path?", "who is the user?"). These don't belong in a wiki — they belong in a searchable fact store.
+**The key asymmetry:** A wiki page requires LLM reasoning to write — summarizing, categorizing, linking to existing pages, maintaining structure. A fact store write is just INSERT. Facts should be auto-saved because they cost almost nothing. Wiki pages should be curated because they cost tokens.
 
-MEMENTO gives you both, and the keyword bridge connects them.
+But you still need the wiki for deep knowledge. The keyword bridge connects the two: facts carry `wiki:slug` references, so a quick `memento deep-recall` can retrieve the full wiki page when you need depth.
 
 ## Feature Comparison: MEMENTO vs Original Hermes Tools
 
@@ -188,6 +188,34 @@ MEMENTO replaces `sqlite-suitectl`, `memory_enhancer_*`, and `memory_l3.py` with
 | Cache clear | `sqlite-suitectl cache-clear` | ❌ | Planned |
 | Experience stats | `sqlite-suitectl experience stats` | ❌ | Planned |
 | Raw SQL query | `sqlite-suitectl query` | ❌ | Planned (use `sqlite3` directly) |
+
+## Time Concepts
+
+MEMENTO treats time as a first-class dimension across all layers:
+
+| Layer | Time Field | Purpose |
+|-------|-----------|---------|
+| Fact store | `created_at`, `updated_at`, `access_count` | Know when a fact was stored, last updated, how often used |
+| Fact store | `ttl` (time-to-live) | Auto-expire temporary facts (0 = permanent) |
+| L3 graph | `precedes` / `follows` relations | Chronological ordering of events, projects, decisions |
+| L3 graph | `contemporaneous` relation | Events that happened at the same time |
+| L3 graph | `timeline <uri>` command | Walks temporal chains to reconstruct order |
+| Experiences | `created_at`, `last_encountered_at` | Track when patterns occurred and recurred |
+| Experiences | `recurrence_count` | Count how many times a failure/lesson repeated |
+
+**Timeline example:**
+
+```bash
+memento relate "mem:project-init" "mem:research-phase" "precedes"
+memento relate "mem:research-phase" "mem:analysis-phase" "precedes"
+memento relate "mem:analysis-phase" "mem:writeup" "precedes"
+
+memento timeline "mem:project-init"
+# 1. mem:project-init
+# 2. mem:research-phase
+# 3. mem:analysis-phase
+# 4. mem:writeup
+```
 
 ## CLI Reference
 

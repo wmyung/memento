@@ -468,6 +468,11 @@ def print_usage():
     print("  upgrade                 Migrate existing data to ~/.memento/")
     print("  upgrade --dry-run       Preview without changes")
     print()
+    print("  MCP (optional):")
+    print("  ────────────────────")
+    print("  mcp                     Start MCP server (stdio, for Claude Code/Codex CLI)")
+    print("  mcp --port 8765         Start MCP server (HTTP)")
+    print()
     print("  Semantic Graph (L3):")
     print("  ────────────────────")
     print("  tag <uri> <tag>")
@@ -486,6 +491,10 @@ def main():
     # init
     if cmd == "init": cmd_init(); return
     if cmd == "status": cmd_status(); return
+    if cmd == "mcp":
+        from mcp_server import main as mcp_main
+        mcp_main()
+        return
     if cmd == "upgrade":
         from upgrade import cmd_upgrade
         cmd_upgrade(dry_run="--dry-run" in sys.argv)

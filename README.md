@@ -129,7 +129,34 @@ MEMENTO at `~/memento/` (or `memento` in PATH).
 - Log every decision with rationale: `memento decide <topic> <decision> --rationale <why>`
 - Connect related facts: `memento relate <source> <target> "informs"`
 
----
+**Agent guidelines:** auto-save facts, ask before wiki write, log decisions and experiences.
+
+## MCP Integration (Optional)
+
+MEMENTO can run as an MCP (Model Context Protocol) server, allowing Claude Code, Codex CLI, Cursor, or any MCP-compatible client to use its memory tools directly.
+
+```bash
+# Stdio mode (for Claude Code config)
+memento mcp
+
+# HTTP SSE mode (for remote access)
+memento mcp --port 8765
+```
+
+**Claude Code configuration (`~/.claude.json`):**
+```json
+{
+  "mcpServers": {
+    "memento": {
+      "command": "memento",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+**Tools exposed via MCP:**
+`memento_recall`, `memento_deep_recall`, `memento_remember`, `memento_wiki_search`, `memento_decide`, `memento_artifact_add`, `memento_experience_add`, `memento_tag`, `memento_relate`, `memento_timeline`, `memento_status`
 
 ## Keyword Bridge
 

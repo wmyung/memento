@@ -149,6 +149,46 @@ memento deep-recall "deployment strategy"
 
 ---
 
+## For Wiki LLM Users
+
+If you currently use [WikiLLM](https://github.com/wmyung/hermes-wiki) (Markdown wiki with raw/sources/analysis pipeline), MEMENTO adds the missing half: **a fast fact store.**
+
+| What you have (WikiLLM) | What MEMENTO adds |
+|--------------------------|-------------------|
+| Deep knowledge (procedures, docs) | Quick facts (preferences, config, entities) — **~5ms recall** |
+| Git versioned, human-readable | SQLite FTS5, agent-searchable |
+| LLM-curated (raw→sources→analysis) | Auto-saved every session, no permission needed |
+| Manual wiki search (`grep`) | `memento recall` — BM25 semantic search |
+| Knowledge isolation | **Keyword bridge** connects facts to wiki pages |
+| Single-agent | **Multi-agent**: shared fact store + shared wiki |
+
+**The key asymmetry:** WikiLLM is optimized for *reading and writing deep knowledge*, which requires human/LLM effort. But most agent memory needs are *quick facts* ("what Python version?", "what's the config path?", "who is the user?"). These don't belong in a wiki — they belong in a searchable fact store.
+
+MEMENTO gives you both, and the keyword bridge connects them.
+
+## Feature Comparison: MEMENTO vs Original Hermes Tools
+
+MEMENTO replaces `sqlite-suitectl`, `memory_enhancer_*`, and `memory_l3.py` with one unified CLI.
+
+| Feature | Original Tool | MEMENTO | Status |
+|---------|--------------|---------|--------|
+| Fact storage | `memory_enhancer_remember` | `memento remember` | ✅ |
+| Fact search | `memory_enhancer_search` | `memento recall` | ✅ |
+| Deep recall (fact→wiki) | — (new) | `memento deep-recall` | ✅ **New** |
+| Wiki search | manual grep | `memento wiki search` | ✅ |
+| Wiki create | manual edit | `memento wiki create` | ✅ |
+| L3 tags | `memory_l3.py tag add` | `memento tag` | ✅ |
+| L3 relations | `memory_l3.py relate` | `memento relate` | ✅ |
+| L3 trace | `memory_l3.py trace` | `memento trace` | ✅ |
+| Artifact registry | `sqlite-suitectl artifact add` | `memento artifact add` | ✅ |
+| Decision log | `sqlite-suitectl decide` | `memento decide` | ✅ |
+| Experience tracking | `sqlite-suitectl experience add` | `memento experience add` | ✅ |
+| DB status | `sqlite-suitectl status` | `memento status` | ✅ |
+| Cache stats | `sqlite-suitectl cache-stats` | ❌ | Planned |
+| Cache clear | `sqlite-suitectl cache-clear` | ❌ | Planned |
+| Experience stats | `sqlite-suitectl experience stats` | ❌ | Planned |
+| Raw SQL query | `sqlite-suitectl query` | ❌ | Planned (use `sqlite3` directly) |
+
 ## CLI Reference
 
 ```

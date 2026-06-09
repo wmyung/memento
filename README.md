@@ -6,6 +6,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/memento-memory)](https://pypi.org/project/memento-memory/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Used by](https://img.shields.io/badge/used%20by-agent--wiki-blue)](https://github.com/wmyung/agent-wiki)
+[![Multi-agent UI](https://img.shields.io/badge/multi--agent%20UI-memento--multiagent-6f42c1)](https://github.com/wmyung/memento-multiagent)
 
 MEMENTO is a **two-system memory** for AI agents:
 
@@ -14,6 +15,17 @@ MEMENTO is a **two-system memory** for AI agents:
 - **A keyword bridge** connecting them — facts carry wiki references. When you need depth, it finds the fact and retrieves the corresponding wiki page.
 
 `pip install memento-memory` and `memento init`. No vector DB. No embeddings. No Docker.
+
+MEMENTO runs on a single local machine. You do **not** need a VM or server unless you want persistent remote agents or team infrastructure.
+
+For a browser control plane that lets humans view, edit, quarantine, and manage memory and skills across Codex, Claude, Hermes, and other agents, see **[wmyung/memento-multiagent](https://github.com/wmyung/memento-multiagent)**.
+
+---
+
+## Related Projects
+
+- **[wmyung/memento](https://github.com/wmyung/memento)** — this lightweight memory core: SQLite fact store, Git/Markdown wiki, keyword bridge, decisions, artifacts, and experiences.
+- **[wmyung/memento-multiagent](https://github.com/wmyung/memento-multiagent)** — optional multi-agent layer: browser control plane, agent registry, skill visibility, memory cleanup, and privacy review.
 
 ---
 

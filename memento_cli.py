@@ -5,7 +5,7 @@ memento — Efficient Memory System: SQLite + LLM + Wiki + Network
 Unified CLI for multi-layer memory in AI agent environments.
 Zero dependencies beyond Python stdlib + SQLite.
 """
-import sqlite3, sys, os, json, time, hashlib, subprocess
+import sqlite3, sys, os, json, time, hashlib, subprocess, shutil
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -197,8 +197,18 @@ def cmd_wiki_create(slug):
         print(f"⚠️  Exists: {path}"); return
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f"# {slug.split('/')[-1]}\n\n")
-    editor = os.environ.get("EDITOR", "vim")
-    subprocess.call([editor, str(path)])
+    editor = os.environ.get("EDITOR")
+    if not editor:
+        for candidate in ("sensible-editor", "editor", "nano", "vim", "vi"):
+            resolved = shutil.which(candidate)
+            if resolved:
+                editor = resolved
+                break
+    if editor:
+        subprocess.call([editor, str(path)])
+    else:
+        print(f"⚠️  No editor found; created without opening: {path}")
+        return
     print(f"✅ Created: {path}")
 
 def cmd_wiki_search(query, limit=10):
